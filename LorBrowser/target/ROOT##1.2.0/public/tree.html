@@ -1,0 +1,147 @@
+<script type="text/javascript" src="js/lib.js"></script>
+<div class="row-fluid">
+    <div class="span3">
+        <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+                <li class="nav-header"><h4>Softchalk Package Options</h4></li>
+                <form onsubmit="return false;">
+                    <fieldset>
+                        <legend>Target</legend>
+                        <input id="_target" type="hidden" />
+                        <h4 id="target" class="text-success"></h4>
+                    </fieldset>
+                </form>
+                <form id="upload-form" onsubmit="return false;" enctype="multipart/form-data">
+                    <fieldset>
+                        <legend>Upload</legend>
+                        <span class="btn btn-warning"><input type="file" name="file" onchange="checkFile(this.files)"/></span><br/><br/>
+                        <button type="button" onclick="upload(user['bucket'],user['target'],1)" class="btn btn-warning" data-loading-text="uploading...">Upload</button>
+                        <br/>
+                        <br/>
+                        <p>Status: <div id="upload-progress" class="text-success"></div></p>
+                    </fieldset>
+                </form>
+                <form onsubmit="return false;">
+                    <fieldset>
+                        <legend>Download</legend>
+                        <button type="button" onclick="download(user['bucket'],user['target'])" class="btn btn-primary" data-loading-text="downloading...">Download</button>
+                        <br/>
+                        <br/>
+                        <p>Status: <div id="download-progress" class="text-success"></div></p>
+                    </fieldset>
+                </form>
+                <form onsubmit="return false;">
+                    <fieldset>
+                        <legend>View</legend>
+                        <select id="domain" class="btn btn-info">
+                            <option selected="selected" value="lor.idiglearning.org">lor.idiglearning.org</option>
+                        </select>
+                        <br/>
+                        <br/>
+                        <button class="btn btn-info" onclick="OpenInNewTab($('#domain').val()+'/'+$('#_target').val());">Open in new tab</button>
+                    </fieldset>
+                </form>
+                <form onsubmit="return false;">
+                    <fieldset>
+                        <legend>Mail</legend>
+                        <input id="recipient" type="text" class="input-block-level" placeholder="Recipient's address" autocomplete="off"/>
+                        <br/>
+                        <button class="btn btn-info" onclick="mail($('#recipient').val(),user['target'])" data-loading-text="sending...">Send Mail</button>
+                    </fieldset>
+                </form>
+            </ul>
+        </div><!--/.well -->
+    </div><!--/span-->
+    <div class="span9">
+        <div class="well hero-unit">
+            <strong>LOR Tree</strong>
+            <div id="body"></div>
+        </div>
+    </div><!--/span-->
+</div><!--/row-->
+<script type="text/javascript">
+
+    $.ajaxSetup({
+        async: false
+    });
+    // creates a user and initializes map values: bucket, key, and target
+    // bucket: S3 bucket
+    // key: S3 bucket prefix read from the URL query param 'key'
+    var user = new Object();
+    var bucket = "/idiglor/";
+    var key = authenticate(getRequests()['key']);
+    var maxprogress = 250;
+    while(key.indexOf("/") != -1) {
+        key = key.replace("/","&");
+    }
+    while(key.indexOf("%2f") != -1) {
+        key = key.replace("%2f","&");
+    }
+    while(key.indexOf("%2F") != -1) {
+        key = key.replace("%2F","&");
+    }
+    if (key == 'unlicensed&') {
+        $("#position").html("Administrator");
+    }
+    else {
+        $("#position").html("Lesson Developer");
+    }
+    init(user, bucket, key);
+    // logs results to console
+    $("#target").html(key.split("&")[key.split("&").length-2]);
+    console.log("key => " + user['key']);
+    console.log("target => " + user['target']);
+    console.log("bucket => " + user['bucket']);
+
+    function getDownloadProgress(status, progress) {
+        if(progress > 0) {
+            $("#download-progress").html(status + " " + progress);
+        }
+        else {
+            $("#download-progress").html("ready for next download");
+        }
+    }
+
+    function getUploadProgress(status, progress) {
+        if(progress > 0) {
+            $("#upload-progress").html(status + " " + progress);
+        }
+        else {
+            $("#upload-progress").html("ready for next upload");
+        }
+    }
+
+    setInterval(function getProgress() {
+        $.ajax ({
+            type: 'GET',
+            url: '/progress',
+            success: function(data) {
+                var response = data.response;
+                getUploadProgress(response[0],response[1]);
+                getDownloadProgress(response[2],response[3]);
+            }
+        });
+    }, 250);
+    //var $bar = $('.bar');
+    //$bar.width();
+    //$bar.text($bar.width()/4 + "%");
+</script>
+<script type="text/javascript" src="js/tree.js"></script>
+
+<!-- Button to trigger modal -->
+<a id="myModalLauncher" href="#myModal" role="button" class="btn hide" data-toggle="modal">Launch demo modal</a>
+
+<!-- Modal -->
+<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">File Overwrites</h3>
+    </div>
+    <div class="modal-body">
+        <p id="modal-body-p"></p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Quit</button>
+        <button onclick="upload(user['bucket'],user['target'],0)" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Overwrite Existing Files</button>
+    </div>
+</div>

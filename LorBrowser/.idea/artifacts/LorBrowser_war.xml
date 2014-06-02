@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" build-on-make="true" name="LorBrowser:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="ROOT##2.2.0.war">
+      <element id="artifact" artifact-name="LorBrowser:war exploded" />
+    </root>
+  </artifact>
+</component>

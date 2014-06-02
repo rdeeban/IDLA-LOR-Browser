@@ -1,0 +1,58 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <context:component-scan base-package="org.idla.lor"/>
+    <context:property-placeholder location="classpath:app.properties" />
+
+    <mvc:annotation-driven />
+
+    <mvc:resources mapping="/public/**" location="/public/" />
+
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="1073741824"/>
+    </bean>
+
+    <bean id="authController" class="org.idla.lor.controllers.AuthController">
+        <property name="key" value="${crypto.key}"></property>
+        <property name="access" value="${s3.access}"></property>
+        <property name="secret" value="${s3.secret}"></property>
+        <property name="bucket" value="${s3.bucket}"></property>
+    </bean>
+
+    <bean id="s3Controller" class="org.idla.lor.controllers.S3Controller">
+        <property name="access" value="${s3.access}"></property>
+        <property name="secret" value="${s3.secret}"></property>
+    </bean>
+
+    <bean id="mailController" class="org.idla.lor.controllers.MailController">
+        <property name="key" value="${crypto.key}"></property>
+        <property name="senderAddress" value="${mail.senderAddress}"></property>
+        <property name="senderPassword" value="${mail.senderPassword}"></property>
+        <property name="subject" value="${mail.senderSubject}"></property>
+    </bean>
+
+    <!-- also add the following beans to get rid of some exceptions -->
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
+    <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+    </bean>
+
+    <!-- also add the following beans to get rid of some exceptions -->
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
+    <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+    </bean>
+
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+
+        <property name="prefix" value="/WEB-INF/view/"/>
+
+        <property name="suffix" value=".jsp"/>
+
+    </bean>
+
+</beans>

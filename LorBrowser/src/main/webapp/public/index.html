@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="css/styles.css"/>
+    <script type="text/javascript" src="js/jquery-1.9.0.js"></script>
+    <script type="text/javascript" src="js/d3.js"></script>
+    <script type="text/javascript" src="js/d3.layout.js"></script>
+    <script type="text/javascript" src="js/lib.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+        .sidebar-nav {
+            padding: 9px 0;
+        }
+
+        @media (max-width: 980px) {
+            /* Enable use of floated navbar text */
+            .navbar-text.pull-right {
+                float: none;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+        }
+
+        .form-signin {
+            max-width: 300px;
+            padding: 19px 29px 29px;
+            margin: 0 auto 20px;
+            background-color: #fff;
+            border: 1px solid #e5e5e5;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        }
+        .form-signin .form-signin-heading,
+        .form-signin .checkbox {
+            margin-bottom: 10px;
+        }
+        .form-signin input[type="text"],
+        .form-signin input[type="password"] {
+            font-size: 16px;
+            height: auto;
+            margin-bottom: 15px;
+            padding: 7px 9px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container-fluid">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="brand">LOR Browser</a>
+            <div class="nav-collapse collapse">
+                <p class="navbar-text pull-right">
+                    Logged in as <a id="position" class="navbar-link">Not logged in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div id="feedback">
+         <!-- feedback for user -->
+    </div>
+
+    <div id="content">
+          <!-- page content -->
+    </div>
+
+    <hr>
+
+    <footer>
+        <p>Author: Deeban Ramalingam</p>
+        <p>&copy; IDLA 2013</p>
+    </footer>
+</div>
+
+<script type="text/javascript">
+    // get url param values
+    var verify = getRequests()['verify'];
+    var key = getRequests()['key'];
+    var token = window.location.hash.split('&')[0].split('#')[1];
+    // initial feedback
+    if (verify && verify == 'fail') {
+        $("#feedback").html("<div class='alert alert-error'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>×</button><strong>Authentication Failure </strong>Not an IDLA account! IDLA emails follow the format: {user}@idla.k12.id.us</div>");
+    }
+    // if key
+    if (key && key.length > 0) {
+        console.log("key => " + key);
+        $.ajax ({
+            type: 'GET',
+            url: 'tree.html',
+            success: function(data) {
+                $("#content").html(data);
+            }
+        })
+    }
+    // if no key but yes token
+    else if (token && token.length > 0) {
+        console.log("token " + token);
+        $.ajax ({
+            type: 'GET',
+            url: 'login.html',
+            success: function(data) {
+                $("#content").html(data);
+                $.ajax({
+                    type: 'GET',
+                    url: 'https://www.googleapis.com/oauth2/v1/tokeninfo?'+token,
+                    success: function (data) {
+                        console.log(data);
+                        if (data.email.indexOf('@idla.k12.id.us') != -1) {
+                            console.log("IDLA user verified");
+                            localStorage.setItem('trace',data.email);
+                            $("#feedback").html("<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>×</button><strong>Authentication Success </strong>IDLA account verified!</div>");
+                        }
+                        else {
+                            window.location = "/public/?verify=fail";
+                        }
+                    }
+                })
+            }
+        })
+    }
+    // if no token
+    else {
+        $.ajax ({
+            type: 'GET',
+            url: 'auth.html',
+            success: function (data) {
+                $("#content").html(data);
+            }
+        })
+    }
+
+</script>
+</body>
+</html>
